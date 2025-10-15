@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intelligence Digest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .digest-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .metadata {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metadata-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .executive-summary {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin-bottom: 30px;
+        }
+
+        .executive-summary h2 {
+            color: #1976D2;
+            margin-bottom: 15px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .threat-card {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .threat-card.critical {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        .threat-card.high {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+
+        .threat-card.medium {
+            background: #fff9c4;
+            border-left-color: #fbc02d;
+        }
+
+        .threat-title {
+            font-weight: bold;
+            color: #d84315;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .threat-card.critical .threat-title {
+            color: #c62828;
+        }
+
+        .threat-card.medium .threat-title {
+            color: #f57f17;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .severity-critical {
+            background: #f44336;
+            color: white;
+        }
+
+        .severity-high {
+            background: #ff9800;
+            color: white;
+        }
+
+        .severity-medium {
+            background: #fbc02d;
+            color: #333;
+        }
+
+        .tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .category-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .category-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .recommendations {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .recommendations h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .recommendations ul {
+            list-style-position: inside;
+            line-height: 1.8;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+
+        .articles-section {
+            margin-top: 30px;
+        }
+
+        .article-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 3px solid #667eea;
+        }
+
+        .article-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .article-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .article-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .article-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Threat Intelligence Digest</h1>
+            <p class="subtitle">AI-Powered Daily Security Briefing</p>
+        </header>
+
+        <div class="controls">
+            <button id="generateBtn" onclick="generateDigest()">Generate New Digest</button>
+            <button id="loadLatestBtn" onclick="loadLatestDigest()">Load Latest Digest</button>
+            <button id="viewHistoryBtn" onclick="viewHistory()">View History</button>
+        </div>
+
+        <div id="content"></div>
+    </div>
+
+    <script>
+        // Load latest digest on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLatestDigest();
+        });
+
+        function showLoading(message = 'Loading...') {
+            document.getElementById('content').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('content').innerHTML = `
+                <div class="error">
+                    <h2>Error</h2>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        async function generateDigest() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            showLoading('Fetching threat intelligence sources and generating digest...<br>This may take a minute.');
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    displayDigest(data);
+                }
+            } catch (error) {
+                showError('Failed to generate digest: ' + error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function loadLatestDigest() {
+            showLoading('Loading latest digest...');
+
+            try {
+                const response = await fetch('/api/latest');
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error + '<br><br>Click "Generate New Digest" to create your first digest.');
+                } else {
+                    displayDigest(data);
+                }
+            } catch (error) {
+                showError('Failed to load digest: ' + error.message);
+            }
+        }
+
+        function displayDigest(data) {
+            const timestamp = new Date(data.timestamp).toLocaleString();
+
+            let html = `
+                <div class="digest-container">
+                    <div class="metadata">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Generated:</span>
+                            <span>${timestamp}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Articles Analyzed:</span>
+                            <span>${data.article_count}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Sources:</span>
+                            <span>${data.sources_count}</span>
+                        </div>
+                    </div>
+
+                    <div class="executive-summary">
+                        <h2>📊 Executive Summary</h2>
+                        <p>${data.executive_summary}</p>
+                    </div>
+            `;
+
+            // Critical Threats
+            if (data.critical_threats && data.critical_threats.length > 0) {
+                html += `
+                    <div class="section">
+                        <h2>🚨 Critical Threats</h2>
+                `;
+
+                data.critical_threats.forEach(threat => {
+                    const severity = (threat.severity || 'medium').toLowerCase();
+                    html += `
+                        <div class="threat-card ${severity}">
+                            <div class="threat-title">
+                                ${threat.title}
+                                <span class="severity-badge severity-${severity}">${threat.severity}</span>
+                            </div>
+                            <p><strong>Description:</strong> ${threat.description}</p>
+                            ${threat.affected_systems ? `<p><strong>Affected Systems:</strong> ${threat.affected_systems}</p>` : ''}
+                            ${threat.recommendation ? `<p><strong>Recommendation:</strong> ${threat.recommendation}</p>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            // Trending Topics
+            if (data.trending_topics && data.trending_topics.length > 0) {
+                html += `
+                    <div class="section">
+                        <h2>📈 Trending Topics</h2>
+                        <div class="tags">
+                `;
+
+                data.trending_topics.forEach(topic => {
+                    html += `<span class="tag">${topic}</span>`;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Category Summaries
+            if (data.categories) {
+                html += `
+                    <div class="section">
+                        <h2>📑 Category Summaries</h2>
+                `;
+
+                for (const [category, summary] of Object.entries(data.categories)) {
+                    html += `
+                        <div class="category-summary">
+                            <div class="category-title">${category}</div>
+                            <p>${summary}</p>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            }
+
+            // Key Recommendations
+            if (data.key_recommendations && data.key_recommendations.length > 0) {
+                html += `
+                    <div class="recommendations">
+                        <h3>✅ Key Recommendations</h3>
+                        <ul>
+                `;
+
+                data.key_recommendations.forEach(rec => {
+                    html += `<li>${rec}</li>`;
+                });
+
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Source Articles
+            if (data.articles && data.articles.length > 0) {
+                html += `
+                    <div class="articles-section">
+                        <h2>📰 Source Articles</h2>
+                `;
+
+                data.articles.forEach(article => {
+                    html += `
+                        <div class="article-card">
+                            <div class="article-title">${article.title}</div>
+                            <div class="article-meta">
+                                <strong>Source:</strong> ${article.source} |
+                                <strong>Published:</strong> ${article.published ? new Date(article.published).toLocaleString() : 'Unknown'}
+                            </div>
+                            <a href="${article.link}" target="_blank" class="article-link">Read Full Article →</a>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        async function viewHistory() {
+            showLoading('Loading digest history...');
+
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+
+                let html = `
+                    <div class="digest-container">
+                        <h2>📚 Digest History</h2>
+                        <p>Total digests: ${history.length}</p>
+                        <div style="margin-top: 20px;">
+                `;
+
+                history.forEach(item => {
+                    const timestamp = new Date(item.timestamp).toLocaleString();
+                    html += `
+                        <div class="article-card" style="cursor: pointer;" onclick="loadDigestByFilename('${item.filename}')">
+                            <div class="article-title">${timestamp}</div>
+                            <div class="article-meta">
+                                ${item.article_count} articles analyzed
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                showError('Failed to load history: ' + error.message);
+            }
+        }
+
+        async function loadDigestByFilename(filename) {
+            showLoading('Loading digest...');
+
+            try {
+                const response = await fetch(`/api/digest/${filename}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    displayDigest(data);
+                }
+            } catch (error) {
+                showError('Failed to load digest: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
