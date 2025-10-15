@@ -5,6 +5,7 @@ An AI-powered web application that fetches the latest threat intelligence report
 ## Features
 
 - **Automated Fetching**: Pulls articles from multiple trusted threat intelligence sources via RSS feeds
+- **Twitter/X Integration**: Fetches real-time updates from security researchers and organizations (FREE using Nitter)
 - **AI Summarization**: Uses OpenRouter API to access multiple AI models (Claude, GPT-4, Llama, etc.) for intelligent analysis
 - **Flexible Model Selection**: Choose from Claude 3.5, GPT-4, or free models like Llama 3.1
 - **Daily Digest**: Automatically generates digests on a scheduled basis
@@ -15,7 +16,7 @@ An AI-powered web application that fetches the latest threat intelligence report
 
 ## Threat Intelligence Sources
 
-The application fetches from the following trusted sources:
+### RSS Feed Sources
 - Krebs on Security
 - Schneier on Security
 - The Hacker News
@@ -23,6 +24,14 @@ The application fetches from the following trusted sources:
 - Dark Reading
 - Threatpost
 - CISA Cybersecurity Advisories
+
+### Twitter/X Sources (via Nitter - FREE)
+- 15+ pre-configured security researcher accounts
+- Support for Twitter lists
+- Real-time threat intelligence
+- No API key required
+
+**See [TWITTER_SETUP.md](TWITTER_SETUP.md) for complete Twitter configuration guide**
 
 ## Architecture
 
@@ -96,7 +105,28 @@ The application fetches from the following trusted sources:
    2. Get free credits (usually $1-5 for new users)
    3. Copy your API key from the dashboard
 
-3. **Configure Settings** (Optional)
+3. **Configure Twitter (Optional)**
+
+   Twitter integration is **enabled by default** using free Nitter RSS feeds.
+
+   To customize Twitter accounts, edit [config.py](config.py):
+   ```python
+   TWITTER_SECURITY_ACCOUNTS = [
+       'vxunderground',
+       'malwrhunterteam',
+       'briankrebs',
+       # Add your favorite security accounts
+   ]
+   ```
+
+   To disable Twitter fetching, add to `.env`:
+   ```
+   TWITTER_ENABLED=False
+   ```
+
+   **See [TWITTER_SETUP.md](TWITTER_SETUP.md) for detailed Twitter configuration**
+
+4. **Configure Other Settings** (Optional)
 
    Edit [config.py](config.py) to customize:
    - Threat intelligence sources
@@ -270,6 +300,11 @@ This tool is designed for **defensive security purposes only**:
 - Check the logs for scheduler status
 - Verify APScheduler is installed
 
+**Twitter not fetching:**
+- See [TWITTER_SETUP.md](TWITTER_SETUP.md) troubleshooting section
+- Check if `TWITTER_ENABLED=True` in `.env`
+- Nitter instances might be temporarily down (app tries multiple instances automatically)
+
 ## File Structure
 
 ```
@@ -277,12 +312,14 @@ threat-digest-summarizer/
 ├── app.py                      # Main Flask app (basic)
 ├── app_with_scheduler.py       # Flask app with scheduler
 ├── fetcher.py                  # Threat intel fetching logic
+├── twitter_fetcher.py          # Twitter/X integration
 ├── summarizer.py               # AI summarization logic
 ├── scheduler.py                # Automated scheduling
 ├── config.py                   # Configuration settings
 ├── requirements.txt            # Python dependencies
 ├── .env.example               # Environment template
 ├── README.md                  # This file
+├── TWITTER_SETUP.md           # Twitter configuration guide
 ├── templates/
 │   └── index.html            # Web interface
 └── data/

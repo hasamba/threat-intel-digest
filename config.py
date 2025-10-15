@@ -64,6 +64,39 @@ THREAT_INTEL_SOURCES = [
     }
 ]
 
+# Twitter/X Configuration (Optional - leave empty to use Nitter for free)
+TWITTER_API_BEARER_TOKEN = os.getenv('TWITTER_API_BEARER_TOKEN', '')
+TWITTER_ENABLED = os.getenv('TWITTER_ENABLED', 'True').lower() == 'true'
+
+# Twitter/X Security Accounts to Follow
+# These are prominent security researchers and organizations
+TWITTER_SECURITY_ACCOUNTS = [
+    'TheCyberVibes',        # Cyber threat intelligence
+    'vxunderground',        # Malware research and collection
+    'malwrhunterteam',      # Malware hunting team
+    'campuscodi',           # Security researcher
+    'briankrebs',           # Krebs on Security
+    'schneier',             # Bruce Schneier
+    'troyhunt',             # Have I Been Pwned creator
+    'SwiftOnSecurity',      # Security awareness
+    'gentilkiwi',           # Mimikatz creator
+    'GossiTheDog',          # Cybersecurity researcher
+    'cyb3rops',             # Florian Roth - Threat detection
+    'jonnyablanc',          # Threat intelligence
+    'malware_traffic',      # Malware traffic analysis
+    'CISAgov',              # CISA official
+    'NSACyber',             # NSA Cybersecurity
+]
+
+# Twitter Lists to Follow (owner/list-name)
+# Example: 'NASA/astronauts' would be https://twitter.com/NASA/lists/astronauts
+TWITTER_SECURITY_LISTS = [
+    # Add your favorite security Twitter lists here
+    # Format: 'username/listname'
+    # Example: 'cybersecboardrm/cybersecurity-experts'
+]
+
 # Storage
 DIGEST_STORAGE_PATH = 'data/digests/'
 MAX_ARTICLES_PER_SOURCE = 5
+MAX_TWEETS_PER_USER = 3

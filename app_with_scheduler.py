@@ -22,10 +22,14 @@ Path(config.DIGEST_STORAGE_PATH).mkdir(parents=True, exist_ok=True)
 def generate_digest():
     """Generate a new threat intelligence digest"""
     try:
-        # Fetch articles
+        # Fetch articles and tweets
         fetcher = ThreatIntelFetcher(
             config.THREAT_INTEL_SOURCES,
-            config.MAX_ARTICLES_PER_SOURCE
+            config.MAX_ARTICLES_PER_SOURCE,
+            twitter_accounts=config.TWITTER_SECURITY_ACCOUNTS,
+            twitter_lists=config.TWITTER_SECURITY_LISTS,
+            max_tweets_per_user=config.MAX_TWEETS_PER_USER,
+            twitter_enabled=config.TWITTER_ENABLED
         )
         articles = fetcher.fetch_all_sources()
 

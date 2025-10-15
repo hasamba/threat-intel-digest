@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(git init)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nConvert to OpenRouter API for multi-model support\n\n- Replace Anthropic SDK with OpenRouter REST API\n- Support multiple AI models (Claude, GPT-4, Llama, etc.)\n- Add OPENROUTER_API_KEY and OPENROUTER_MODEL config\n- Update summarizer.py to use OpenRouter endpoints\n- Remove anthropic dependency from requirements.txt\n- Add free model options (Llama 3.1, etc.)\n- Update all documentation for OpenRouter setup\n- Add model comparison and pricing info to README\n\nBenefits:\n- Access to 50+ models with one API key\n- Free credits for new users\n- Free models available (Llama 3.1)\n- Easy model switching via environment variable\n- More cost-effective options\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git add summarizer.py)",
+      "Bash(git commit -m \"Fix JSON parsing error with improved error handling\n\n- Add detailed logging for API responses\n- Handle markdown code blocks in AI responses\n- Extract JSON from wrapped responses\n- Improve error messages with troubleshooting hints\n- Add validation for empty responses\n- Update prompt to explicitly request pure JSON output\n\nFixes issue where AI responses couldn''t be parsed as JSON.\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")"
     ],
     "deny": [],
     "ask": []

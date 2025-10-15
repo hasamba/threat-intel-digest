@@ -2,7 +2,7 @@
 import feedparser
 import requests
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Optional
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -12,9 +12,17 @@ logger = logging.getLogger(__name__)
 class ThreatIntelFetcher:
     """Fetches threat intelligence articles from RSS feeds and web sources"""
 
-    def __init__(self, sources: List[Dict], max_articles_per_source: int = 5):
+    def __init__(self, sources: List[Dict], max_articles_per_source: int = 5,
+                 twitter_accounts: Optional[List[str]] = None,
+                 twitter_lists: Optional[List[str]] = None,
+                 max_tweets_per_user: int = 3,
+                 twitter_enabled: bool = True):
         self.sources = sources
         self.max_articles = max_articles_per_source
+        self.twitter_accounts = twitter_accounts or []
+        self.twitter_lists = twitter_lists or []
+        self.max_tweets = max_tweets_per_user
+        self.twitter_enabled = twitter_enabled
 
     def fetch_rss_feed(self, url: str, source_name: str) -> List[Dict]:
         """Fetch articles from an RSS feed"""
@@ -51,14 +59,52 @@ class ThreatIntelFetcher:
             logger.error(f"Error fetching RSS feed from {source_name}: {str(e)}")
             return []
 
+    def fetch_twitter_content(self) -> List[Dict]:
+        """Fetch tweets from configured Twitter accounts and lists"""
+        if not self.twitter_enabled:
+            logger.info("Twitter/X fetching is disabled")
+            return []
+
+        try:
+            from twitter_fetcher import TwitterFetcher
+            twitter = TwitterFetcher(max_tweets_per_user=self.max_tweets)
+
+            all_tweets = []
+
+            # Fetch from individual accounts
+            if self.twitter_accounts:
+                logger.info(f"Fetching from {len(self.twitter_accounts)} Twitter accounts")
+                tweets = twitter.fetch_multiple_users(self.twitter_accounts)
+                all_tweets.extend(tweets)
+
+            # Fetch from lists
+            if self.twitter_lists:
+                for list_spec in self.twitter_lists:
+                    if '/' in list_spec:
+                        owner, list_name = list_spec.split('/', 1)
+                        tweets = twitter.fetch_list_tweets_nitter(owner, list_name)
+                        all_tweets.extend(tweets)
+
+            logger.info(f"Total tweets fetched: {len(all_tweets)}")
+            return all_tweets
+
+        except Exception as e:
+            logger.error(f"Error fetching Twitter content: {str(e)}")
+            return []
+
     def fetch_all_sources(self) -> List[Dict]:
-        """Fetch articles from all configured sources"""
+        """Fetch articles from all configured sources including Twitter"""
         all_articles = []
 
+        # Fetch RSS feeds
         for source in self.sources:
             if source['type'] == 'rss':
                 articles = self.fetch_rss_feed(source['url'], source['name'])
                 all_articles.extend(articles)
+
+        # Fetch Twitter content
+        tweets = self.fetch_twitter_content()
+        all_articles.extend(tweets)
 
         logger.info(f"Total articles fetched: {len(all_articles)}")
         return all_articles
