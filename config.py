@@ -65,8 +65,10 @@ THREAT_INTEL_SOURCES = [
 ]
 
 # Twitter/X Configuration (Optional - leave empty to use Nitter for free)
+# NOTE: Disabled by default because Nitter instances are often down
+# Set TWITTER_ENABLED=True in .env to enable
 TWITTER_API_BEARER_TOKEN = os.getenv('TWITTER_API_BEARER_TOKEN', '')
-TWITTER_ENABLED = os.getenv('TWITTER_ENABLED', 'True').lower() == 'true'
+TWITTER_ENABLED = os.getenv('TWITTER_ENABLED', 'False').lower() == 'true'
 
 # Twitter/X Security Accounts to Follow
 # These are prominent security researchers and organizations

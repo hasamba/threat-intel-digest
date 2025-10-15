@@ -46,6 +46,11 @@ class TwitterFetcher:
                 feed_url = f"{instance}/{username}/rss"
 
                 logger.info(f"Fetching tweets from @{username} via {instance}")
+
+                # Add timeout to prevent hanging
+                import socket
+                socket.setdefaulttimeout(10)  # 10 second timeout
+
                 feed = feedparser.parse(feed_url)
 
                 if not feed.entries:
@@ -100,6 +105,11 @@ class TwitterFetcher:
                 feed_url = f"{instance}/{list_owner}/lists/{list_name}/rss"
 
                 logger.info(f"Fetching tweets from list @{list_owner}/{list_name} via {instance}")
+
+                # Add timeout to prevent hanging
+                import socket
+                socket.setdefaulttimeout(10)  # 10 second timeout
+
                 feed = feedparser.parse(feed_url)
 
                 if not feed.entries:
