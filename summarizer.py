@@ -45,7 +45,9 @@ Analyze the following threat intelligence articles and create a comprehensive su
 
 {articles_text}
 
-Please provide a structured summary in the following JSON format:
+IMPORTANT: Respond with ONLY valid JSON. Do not include any explanatory text, markdown code blocks, or formatting - just the raw JSON object.
+
+Provide a structured summary in the following JSON format:
 {{
     "executive_summary": "A 2-3 paragraph executive summary of the most important security threats and trends",
     "critical_threats": [
@@ -71,7 +73,7 @@ Please provide a structured summary in the following JSON format:
     ]
 }}
 
-Focus on actionable intelligence and prioritize information that security teams need to know."""
+Focus on actionable intelligence and prioritize information that security teams need to know. Return ONLY the JSON object, nothing else."""
 
         try:
             headers = {
@@ -103,11 +105,36 @@ Focus on actionable intelligence and prioritize information that security teams 
             response.raise_for_status()
             result = response.json()
 
+            # Log the full response for debugging
+            logger.info(f"OpenRouter API response status: {response.status_code}")
+
             # Extract the assistant's response
+            if 'choices' not in result or len(result['choices']) == 0:
+                logger.error(f"Invalid API response structure: {result}")
+                raise ValueError(f"Invalid API response: {result.get('error', 'No choices in response')}")
+
             summary_text = result['choices'][0]['message']['content']
 
+            if not summary_text or summary_text.strip() == '':
+                logger.error("Empty response from AI model")
+                raise ValueError("Empty response from AI model")
+
+            logger.info(f"Received response from {self.model}, length: {len(summary_text)} chars")
+
+            # Try to extract JSON from response (sometimes AI includes markdown code blocks)
+            summary_text = summary_text.strip()
+            if summary_text.startswith('```json'):
+                summary_text = summary_text.split('```json')[1].split('```')[0].strip()
+            elif summary_text.startswith('```'):
+                summary_text = summary_text.split('```')[1].split('```')[0].strip()
+
             # Parse the JSON response
-            summary_data = json.loads(summary_text)
+            try:
+                summary_data = json.loads(summary_text)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse JSON. Response preview: {summary_text[:500]}")
+                raise
+
             summary_data['article_count'] = len(articles)
             summary_data['articles'] = articles
 
@@ -116,6 +143,12 @@ Focus on actionable intelligence and prioritize information that security teams 
 
         except requests.exceptions.RequestException as e:
             logger.error(f"API request error: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json()
+                    logger.error(f"API error details: {error_detail}")
+                except:
+                    logger.error(f"API error response: {e.response.text[:500]}")
             return {
                 'executive_summary': f'Error generating summary: API request failed - {str(e)}',
                 'critical_threats': [],
@@ -126,8 +159,12 @@ Focus on actionable intelligence and prioritize information that security teams 
             }
         except json.JSONDecodeError as e:
             logger.error(f"JSON parsing error: {str(e)}")
+            logger.error(f"Failed to parse AI response as JSON. This might be due to:")
+            logger.error(f"1. Invalid API key or insufficient credits")
+            logger.error(f"2. Model not available or incorrect model name")
+            logger.error(f"3. AI response is not in valid JSON format")
             return {
-                'executive_summary': f'Error parsing summary: {str(e)}',
+                'executive_summary': f'Error parsing summary: The AI model did not return valid JSON. Check your API key and model selection.',
                 'critical_threats': [],
                 'trending_topics': [],
                 'categories': {},
@@ -135,7 +172,7 @@ Focus on actionable intelligence and prioritize information that security teams 
                 'articles': articles
             }
         except Exception as e:
-            logger.error(f"Error generating summary: {str(e)}")
+            logger.error(f"Error generating summary: {str(e)}", exc_info=True)
             return {
                 'executive_summary': f'Error generating summary: {str(e)}',
                 'critical_threats': [],
