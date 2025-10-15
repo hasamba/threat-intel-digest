@@ -34,7 +34,10 @@ def generate_digest():
             }
 
         # Summarize articles
-        summarizer = ThreatIntelSummarizer(config.ANTHROPIC_API_KEY)
+        summarizer = ThreatIntelSummarizer(
+            config.OPENROUTER_API_KEY,
+            config.OPENROUTER_MODEL
+        )
         digest = summarizer.summarize_articles(articles)
 
         # Add metadata

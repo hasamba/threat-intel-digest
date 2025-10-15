@@ -1,17 +1,20 @@
 """LLM-based summarization of threat intelligence articles"""
-import anthropic
+import requests
 from typing import List, Dict
 import logging
+import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class ThreatIntelSummarizer:
-    """Summarizes threat intelligence articles using Claude AI"""
+    """Summarizes threat intelligence articles using OpenRouter API"""
 
-    def __init__(self, api_key: str):
-        self.client = anthropic.Anthropic(api_key=api_key)
+    def __init__(self, api_key: str, model: str = 'anthropic/claude-3.5-sonnet'):
+        self.api_key = api_key
+        self.model = model
+        self.api_url = 'https://openrouter.ai/api/v1/chat/completions'
 
     def summarize_articles(self, articles: List[Dict]) -> Dict:
         """
@@ -71,26 +74,66 @@ Please provide a structured summary in the following JSON format:
 Focus on actionable intelligence and prioritize information that security teams need to know."""
 
         try:
-            response = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=4096,
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }]
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://github.com/threat-intel-digest',
+                'X-Title': 'Threat Intelligence Digest Summarizer'
+            }
+
+            data = {
+                'model': self.model,
+                'messages': [
+                    {
+                        'role': 'user',
+                        'content': prompt
+                    }
+                ],
+                'max_tokens': 4096,
+                'temperature': 0.7
+            }
+
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                json=data,
+                timeout=120
             )
 
-            summary_text = response.content[0].text
+            response.raise_for_status()
+            result = response.json()
+
+            # Extract the assistant's response
+            summary_text = result['choices'][0]['message']['content']
 
             # Parse the JSON response
-            import json
             summary_data = json.loads(summary_text)
             summary_data['article_count'] = len(articles)
             summary_data['articles'] = articles
 
-            logger.info("Successfully generated threat intelligence digest")
+            logger.info(f"Successfully generated threat intelligence digest using {self.model}")
             return summary_data
 
+        except requests.exceptions.RequestException as e:
+            logger.error(f"API request error: {str(e)}")
+            return {
+                'executive_summary': f'Error generating summary: API request failed - {str(e)}',
+                'critical_threats': [],
+                'trending_topics': [],
+                'categories': {},
+                'article_count': len(articles),
+                'articles': articles
+            }
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {str(e)}")
+            return {
+                'executive_summary': f'Error parsing summary: {str(e)}',
+                'critical_threats': [],
+                'trending_topics': [],
+                'categories': {},
+                'article_count': len(articles),
+                'articles': articles
+            }
         except Exception as e:
             logger.error(f"Error generating summary: {str(e)}")
             return {

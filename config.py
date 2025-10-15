@@ -5,7 +5,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API Configuration
-ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
+
+# OpenRouter Model Selection
+# Popular options:
+# - anthropic/claude-3.5-sonnet (Best quality, more expensive)
+# - anthropic/claude-3-haiku (Faster, cheaper)
+# - openai/gpt-4-turbo (Alternative to Claude)
+# - openai/gpt-3.5-turbo (Cheapest option)
+# - meta-llama/llama-3.1-70b-instruct (Free tier available)
+# - google/gemini-pro (Good balance)
+OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'anthropic/claude-3.5-sonnet')
 
 # Flask Configuration
 FLASK_PORT = int(os.getenv('FLASK_PORT', 5000))

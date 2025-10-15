@@ -1,11 +1,12 @@
 # Threat Intelligence Digest Summarizer
 
-An AI-powered web application that fetches the latest threat intelligence reports and security blogs, summarizes them using Claude AI, and presents a comprehensive daily digest to security professionals.
+An AI-powered web application that fetches the latest threat intelligence reports and security blogs, summarizes them using AI (via OpenRouter), and presents a comprehensive daily digest to security professionals.
 
 ## Features
 
 - **Automated Fetching**: Pulls articles from multiple trusted threat intelligence sources via RSS feeds
-- **AI Summarization**: Uses Claude AI to analyze and summarize security news into actionable intelligence
+- **AI Summarization**: Uses OpenRouter API to access multiple AI models (Claude, GPT-4, Llama, etc.) for intelligent analysis
+- **Flexible Model Selection**: Choose from Claude 3.5, GPT-4, or free models like Llama 3.1
 - **Daily Digest**: Automatically generates digests on a scheduled basis
 - **Web Interface**: Clean, modern UI for viewing and managing digests
 - **Historical Archive**: Stores all previous digests for reference
@@ -40,8 +41,8 @@ The application fetches from the following trusted sources:
 │  │    Fetcher     │  │  Summarizer  │  │   Scheduler     │ │
 │  │  (fetcher.py)  │  │(summarizer.py│  │ (scheduler.py)  │ │
 │  │                │  │              │  │                 │ │
-│  │ - RSS feeds    │  │ - Claude AI  │  │ - Daily tasks   │ │
-│  │ - Web scraping │  │ - Analysis   │  │ - APScheduler   │ │
+│  │ - RSS feeds    │  │ - OpenRouter │  │ - Daily tasks   │ │
+│  │ - Web scraping │  │ - Multi-LLM  │  │ - APScheduler   │ │
 │  └────────────────┘  └──────────────┘  └─────────────────┘ │
 └──────────────────────────────────────────────────────────────┘
                       │
@@ -56,7 +57,7 @@ The application fetches from the following trusted sources:
 
 ### Prerequisites
 - Python 3.8 or higher
-- Anthropic API key (for Claude AI)
+- OpenRouter API key (get free credits at https://openrouter.ai/)
 
 ### Setup Instructions
 
@@ -72,10 +73,28 @@ The application fetches from the following trusted sources:
    cp .env.example .env
    ```
 
-   Edit `.env` and add your Anthropic API key:
+   Edit `.env` and add your OpenRouter API key:
    ```
-   ANTHROPIC_API_KEY=your_actual_api_key_here
+   OPENROUTER_API_KEY=your_actual_api_key_here
    ```
+
+   **Optional**: Choose a specific model (defaults to Claude 3.5 Sonnet):
+   ```
+   OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
+   ```
+
+   **Popular Model Options:**
+   - `anthropic/claude-3.5-sonnet` - Best quality (recommended)
+   - `anthropic/claude-3-haiku` - Faster and cheaper
+   - `openai/gpt-4-turbo` - OpenAI's flagship model
+   - `openai/gpt-3.5-turbo` - Cheapest option
+   - `meta-llama/llama-3.1-70b-instruct` - Free tier available
+   - `google/gemini-pro` - Good balance of quality and cost
+
+   **Get your OpenRouter API key:**
+   1. Sign up at https://openrouter.ai/
+   2. Get free credits (usually $1-5 for new users)
+   3. Copy your API key from the dashboard
 
 3. **Configure Settings** (Optional)
 
@@ -204,10 +223,16 @@ Edit [config.py](config.py) and add to `THREAT_INTEL_SOURCES`:
 ### Customizing Summarization
 
 Edit [summarizer.py](summarizer.py) to modify:
-- The prompt sent to Claude AI
+- The prompt sent to the AI model
 - Summary structure and categories
 - Analysis depth
 - Output format
+
+Or change the model in `.env`:
+```
+OPENROUTER_MODEL=openai/gpt-4-turbo  # Switch to GPT-4
+OPENROUTER_MODEL=meta-llama/llama-3.1-70b-instruct  # Use free Llama
+```
 
 ### Changing the UI
 
@@ -235,9 +260,10 @@ This tool is designed for **defensive security purposes only**:
 - Some sources may be temporarily down
 
 **API errors:**
-- Verify your Anthropic API key is correct in `.env`
-- Check you have sufficient API credits
-- Ensure the API key has proper permissions
+- Verify your OpenRouter API key is correct in `.env`
+- Check you have sufficient credits at https://openrouter.ai/
+- Try a different model (some require payment, others are free)
+- Check the console logs for detailed error messages
 
 **Scheduler not running:**
 - Use `app_with_scheduler.py` instead of `app.py`
@@ -267,9 +293,8 @@ threat-digest-summarizer/
 
 - **Flask**: Web framework
 - **feedparser**: RSS feed parsing
-- **anthropic**: Claude AI integration
+- **requests**: HTTP requests and OpenRouter API integration
 - **beautifulsoup4**: HTML parsing
-- **requests**: HTTP requests
 - **apscheduler**: Task scheduling
 - **python-dotenv**: Environment management
 
@@ -300,6 +325,22 @@ For issues or questions:
 ## Credits
 
 Powered by:
-- Anthropic Claude AI for intelligent summarization
+- OpenRouter for unified AI API access (supporting Claude, GPT-4, Llama, and more)
 - Various threat intelligence sources for security news
 - Open source Python libraries
+
+## Why OpenRouter?
+
+**OpenRouter Benefits:**
+- **Multiple Models**: Access Claude, GPT-4, Llama, Gemini, and many others with one API
+- **Free Credits**: New users get free credits to try different models
+- **Cost Effective**: Compare prices and choose the best model for your budget
+- **No Vendor Lock-in**: Switch between AI providers without code changes
+- **Free Models Available**: Use models like Llama 3.1 at no cost
+
+**Pricing Examples (approximate):**
+- Claude 3.5 Sonnet: ~$3 per million tokens
+- GPT-4 Turbo: ~$10 per million tokens
+- GPT-3.5 Turbo: ~$0.50 per million tokens
+- Llama 3.1 70B: Often free or very cheap
+- Daily digest cost: $0.01 - $0.10 per day depending on model choice
