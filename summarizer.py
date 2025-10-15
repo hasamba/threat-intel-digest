@@ -16,6 +16,12 @@ class ThreatIntelSummarizer:
         self.model = model
         self.api_url = 'https://openrouter.ai/api/v1/chat/completions'
 
+        # Validate API key
+        if not api_key or api_key == 'your_openrouter_api_key_here':
+            logger.error("Invalid or missing OpenRouter API key!")
+            logger.error("Please set OPENROUTER_API_KEY in your .env file")
+            logger.error("Get your free API key from https://openrouter.ai/")
+
     def summarize_articles(self, articles: List[Dict]) -> Dict:
         """
         Summarize multiple threat intelligence articles into a daily digest
@@ -117,22 +123,42 @@ Focus on actionable intelligence and prioritize information that security teams 
 
             if not summary_text or summary_text.strip() == '':
                 logger.error("Empty response from AI model")
+                logger.error(f"Full API response: {result}")
                 raise ValueError("Empty response from AI model")
 
             logger.info(f"Received response from {self.model}, length: {len(summary_text)} chars")
+            logger.info(f"Response starts with: {summary_text[:200]}")
 
             # Try to extract JSON from response (sometimes AI includes markdown code blocks)
             summary_text = summary_text.strip()
-            if summary_text.startswith('```json'):
+
+            # Method 1: Remove markdown code blocks
+            if '```json' in summary_text:
+                logger.info("Extracting JSON from markdown code block (```json)")
                 summary_text = summary_text.split('```json')[1].split('```')[0].strip()
-            elif summary_text.startswith('```'):
+            elif '```' in summary_text:
+                logger.info("Extracting JSON from markdown code block (```)")
                 summary_text = summary_text.split('```')[1].split('```')[0].strip()
+
+            # Method 2: Find JSON object by looking for { }
+            if not summary_text.startswith('{'):
+                logger.info("JSON doesn't start with {, searching for JSON object...")
+                import re
+                json_match = re.search(r'\{.*\}', summary_text, re.DOTALL)
+                if json_match:
+                    summary_text = json_match.group(0)
+                    logger.info("Found JSON object in response")
+                else:
+                    logger.error("No JSON object found in response")
 
             # Parse the JSON response
             try:
                 summary_data = json.loads(summary_text)
+                logger.info("Successfully parsed JSON response")
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse JSON. Response preview: {summary_text[:500]}")
+                logger.error(f"Failed to parse JSON. Error: {str(e)}")
+                logger.error(f"Response preview (first 1000 chars): {summary_text[:1000]}")
+                logger.error(f"Response preview (last 500 chars): {summary_text[-500:]}")
                 raise
 
             summary_data['article_count'] = len(articles)
